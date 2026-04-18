@@ -3,7 +3,15 @@ import { bus } from "../realtime/bus.js";
 import { newId } from "../lib/ids.js";
 
 const DEFAULT_RADIUS_M = 800;
-const PING_INTERVAL_MS = 15_000;
+const PING_INTERVAL_MS = 10_000;
+/**
+ * Comment line appended after every SSE frame. Fly's edge (Envoy/HTTP/2)
+ * holds small frames inside its outbound buffer until either enough
+ * bytes accumulate or the window ticks — which for tiny `campaign`
+ * events means seconds of delay. Tagging each frame with a ~2KB
+ * comment pushes it over the flush threshold immediately.
+ */
+const FRAME_PAD = `:${" ".repeat(2048)}\n\n`;
 
 /**
  * SSE endpoint. Each connection registers itself in the `bus` and
@@ -61,20 +69,21 @@ export async function registerStreamRoute(app: FastifyInstance): Promise<void> {
       reply.hijack();
       raw.flushHeaders?.();
 
-      // Some intermediaries (HTTP/2 proxies, fly-proxy in certain paths,
-      // nginx without `X-Accel-Buffering: no`) hold on to tiny SSE frames
-      // until a buffer threshold is met, which means live `campaign`
-      // events can arrive seconds — or never — after we write them.
-      // Pushing a ~2KB comment as the very first byte forces the proxy
-      // to flush immediately, and from then on every subsequent frame
-      // ships in real time.
-      raw.write(`:${" ".repeat(2048)}\n\n`);
+      // Flush headers + first useful chunk immediately: without this,
+      // the initial write is held back by HTTP/2 framing on Fly's
+      // edge and the client's `open` event fires only after the first
+      // significant payload arrives.
+      raw.write(FRAME_PAD);
 
       const subId = newId();
       const send = (event: string, data: unknown): void => {
         if (raw.destroyed || raw.writableEnded) return;
+        // Each outgoing event is followed by another 2KB pad so the
+        // Fly edge flushes it to the browser straight away instead of
+        // holding on to the tiny ~400B payload.
         raw.write(`event: ${event}\n`);
         raw.write(`data: ${JSON.stringify(data)}\n\n`);
+        raw.write(FRAME_PAD);
       };
 
       const unsubscribe = bus.subscribe({
@@ -88,12 +97,13 @@ export async function registerStreamRoute(app: FastifyInstance): Promise<void> {
       // subscription params (useful when debugging over curl).
       send("hello", { id: subId, location: { lat, lng }, radiusM });
 
-      // Shorter keep-alive (every 15s instead of 20s) so Fly's edge
-      // definitely sees traffic well within its idle-close window and
-      // can't decide the connection is dead.
+      // Aggressive keep-alive: every 10s we ship a padded comment to
+      // keep Fly's edge from declaring the connection idle AND to
+      // drain any micro-frames still sitting in its buffer.
       const ping = setInterval(() => {
         if (raw.destroyed || raw.writableEnded) return;
         raw.write(`: ping ${Date.now()}\n\n`);
+        raw.write(FRAME_PAD);
       }, PING_INTERVAL_MS);
 
       const cleanup = (): void => {
