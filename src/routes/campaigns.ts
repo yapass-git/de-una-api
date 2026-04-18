@@ -29,16 +29,18 @@ export async function registerCampaignRoutes(app: FastifyInstance): Promise<void
                 "refiera-una-vez",
                 "compre-3-veces",
                 "apure-veci",
+                "descuento-al-total",
               ],
             },
             radiusM: { type: "number", minimum: 50, maximum: 10_000 },
             durationMin: { type: "number", minimum: 1, maximum: 1440 },
+            discountPct: { type: "number", minimum: 1, maximum: 99 },
           },
         },
       },
     },
     async (req, reply) => {
-      const { businessId, type, radiusM, durationMin } = req.body;
+      const { businessId, type, radiusM, durationMin, discountPct } = req.body;
       const business = businessStore.get(businessId);
       if (!business) {
         return reply.code(404).send({ error: "business_not_found" });
@@ -63,7 +65,7 @@ export async function registerCampaignRoutes(app: FastifyInstance): Promise<void
         type,
         title: meta.title,
         description: meta.description,
-        discountPct: meta.discountPct,
+        discountPct: discountPct ?? meta.discountPct,
         investUSD: meta.investUSD,
         reachPeople: meta.reachPeople,
         radiusM: radiusM ?? DEFAULT_RADIUS_M,

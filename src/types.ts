@@ -22,7 +22,8 @@ export type CampaignType =
   | "vuelve-veci"
   | "refiera-una-vez"
   | "compre-3-veces"
-  | "apure-veci";
+  | "apure-veci"
+  | "descuento-al-total";
 
 export type Business = {
   id: string;
@@ -78,6 +79,12 @@ export type CreateCampaignInput = {
   radiusM?: number;
   /** How long the campaign stays active, in minutes. Default 60. */
   durationMin?: number;
+  /**
+   * Per-request override for the discount percentage. When set, wins over
+   * the catalogue default. Used by dynamic flows like the "OTRO" picker
+   * in `deuna-negocios` where the owner picks an arbitrary value.
+   */
+  discountPct?: number;
 };
 
 /**
@@ -117,5 +124,12 @@ export const CAMPAIGN_CATALOGUE: Record<
     discountPct: 30,
     investUSD: 12,
     reachPeople: 60,
+  },
+  "descuento-al-total": {
+    title: "Aplica un descuento al Total",
+    description: "Descuento directo al total de tu próxima compra.",
+    discountPct: 10,
+    investUSD: 5,
+    reachPeople: 0,
   },
 };
