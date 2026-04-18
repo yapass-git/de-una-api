@@ -37,4 +37,13 @@ export const campaignStore = {
       (c) => new Date(c.expiresAt).getTime() > cutoff,
     );
   },
+  /** Every campaign ever created for a business, newest first. */
+  listByBusiness(businessId: string): Campaign[] {
+    return Array.from(campaigns.values())
+      .filter((c) => c.businessId === businessId)
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+  },
 };

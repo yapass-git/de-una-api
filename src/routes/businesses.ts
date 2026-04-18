@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { businessStore } from "../store/memory.js";
+import { businessStore, campaignStore } from "../store/memory.js";
 import { newId } from "../lib/ids.js";
 import type { Business, UpsertBusinessInput } from "../types.js";
 
@@ -47,4 +47,21 @@ export async function registerBusinessRoutes(app: FastifyInstance): Promise<void
     if (!b) return reply.code(404).send({ error: "not_found" });
     return { business: b };
   });
+
+  // Admin-side history: every campaign ever launched by this business,
+  // newest first. Also flags which ones are still active so the UI can
+  // render a badge without recomputing `expiresAt` on the client.
+  app.get<{ Params: { id: string } }>(
+    "/businesses/:id/campaigns",
+    async (req, reply) => {
+      const b = businessStore.get(req.params.id);
+      if (!b) return reply.code(404).send({ error: "not_found" });
+      const now = Date.now();
+      const campaigns = campaignStore.listByBusiness(req.params.id).map((c) => ({
+        ...c,
+        isActive: new Date(c.expiresAt).getTime() > now,
+      }));
+      return { campaigns };
+    },
+  );
 }

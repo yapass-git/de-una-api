@@ -40,14 +40,25 @@ export async function registerStreamRoute(app: FastifyInstance): Promise<void> {
         return reply.code(400).send({ error: "invalid_coordinates" });
       }
 
+      // Let @fastify/cors (and any other onRequest hook) add their headers
+      // to `reply` first, then copy them onto the raw response. Without
+      // this, cross-origin EventSource connections are rejected because
+      // access-control-allow-origin never makes it to the wire.
+      reply.header("Content-Type", "text/event-stream");
+      reply.header("Cache-Control", "no-cache, no-transform");
+      reply.header("Connection", "keep-alive");
+      reply.header("X-Accel-Buffering", "no");
+
       const raw = reply.raw;
       raw.statusCode = 200;
-      raw.setHeader("Content-Type", "text/event-stream");
-      raw.setHeader("Cache-Control", "no-cache, no-transform");
-      raw.setHeader("Connection", "keep-alive");
-      raw.setHeader("X-Accel-Buffering", "no");
-      // Flush headers so the browser opens the stream immediately
-      // instead of waiting for the first body chunk.
+      const accumulated = reply.getHeaders();
+      for (const [key, value] of Object.entries(accumulated)) {
+        if (value === undefined) continue;
+        raw.setHeader(key, value as number | string | readonly string[]);
+      }
+      // Tell Fastify we own the socket now — it must not try to send
+      // another response on top of our chunked stream.
+      reply.hijack();
       raw.flushHeaders?.();
 
       const subId = newId();
@@ -80,11 +91,6 @@ export async function registerStreamRoute(app: FastifyInstance): Promise<void> {
 
       req.raw.on("close", cleanup);
       reply.raw.on("close", cleanup);
-
-      // Signal to Fastify that we're taking over the socket lifetime.
-      // Returning `reply` tells it not to try to send a body of its
-      // own on top of our chunked stream.
-      return reply;
     },
   );
 }
