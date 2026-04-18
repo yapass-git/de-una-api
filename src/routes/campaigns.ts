@@ -32,7 +32,7 @@ export async function registerCampaignRoutes(app: FastifyInstance): Promise<void
                 "descuento-al-total",
               ],
             },
-            radiusM: { type: "number", minimum: 50, maximum: 10_000 },
+            radiusM: { type: "number", minimum: 50, maximum: 100_000 },
             durationMin: { type: "number", minimum: 1, maximum: 1440 },
             discountPct: { type: "number", minimum: 1, maximum: 99 },
           },
