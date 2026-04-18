@@ -9,7 +9,7 @@
 #     consistent. Scaling horizontally would require moving the store
 #     and pub/sub out of the process.
 
-app = "deuna-api"
+app = "deuna-api-marcado993"
 primary_region = "gru"
 
 [build]
