@@ -1,48 +1,23 @@
-# Fly.io configuration for deuna-api.
+# fly.toml app configuration file generated for de-una-api on 2026-04-18T06:27:26Z
 #
-# Critical bits for this workload:
-#   * `min_machines_running = 1` — SSE connections would die on cold
-#     starts; keep exactly one machine warm at all times.
-#   * `auto_stop_machines = "off"` — same reason. We *want* Fly to keep
-#     the VM hot.
-#   * Single region (`gru` = São Paulo) so in-memory state stays
-#     consistent. Scaling horizontally would require moving the store
-#     and pub/sub out of the process.
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-app = "deuna-api"
-primary_region = "gru"
+app = 'de-una-api'
+primary_region = 'ams'
 
 [build]
-  dockerfile = "Dockerfile"
-
-[env]
-  PORT = "4000"
 
 [http_service]
-  internal_port = 4000
+  internal_port = 8080
   force_https = true
-  auto_stop_machines = "off"
+  auto_stop_machines = 'stop'
   auto_start_machines = true
-  min_machines_running = 1
-  processes = ["app"]
-
-  [http_service.concurrency]
-    type = "connections"
-    # SSE consumers are long-lived; keep the ceiling generous so Fly
-    # doesn't route new connections away from the warm machine.
-    soft_limit = 200
-    hard_limit = 250
-
-  [[http_service.checks]]
-    grace_period = "10s"
-    interval = "30s"
-    method = "GET"
-    path = "/health"
-    protocol = "http"
-    timeout = "5s"
+  min_machines_running = 0
+  processes = ['app']
 
 [[vm]]
-  size = "shared-cpu-1x"
-  memory = "256mb"
-  cpu_kind = "shared"
+  memory = '1gb'
+  cpu_kind = 'shared'
   cpus = 1
+  memory_mb = 256
