@@ -85,7 +85,12 @@ export async function registerCampaignRoutes(app: FastifyInstance): Promise<void
   );
 
   app.get<{
-    Querystring: { lat: string; lng: string; radiusM?: string };
+    Querystring: {
+      lat: string;
+      lng: string;
+      radiusM?: string;
+      maxAgeMs?: string;
+    };
   }>(
     "/campaigns/nearby",
     {
@@ -97,6 +102,7 @@ export async function registerCampaignRoutes(app: FastifyInstance): Promise<void
             lat: { type: "string" },
             lng: { type: "string" },
             radiusM: { type: "string" },
+            maxAgeMs: { type: "string" },
           },
         },
       },
@@ -107,13 +113,24 @@ export async function registerCampaignRoutes(app: FastifyInstance): Promise<void
       const radiusM = req.query.radiusM
         ? Number(req.query.radiusM)
         : DEFAULT_RADIUS_M;
+      // "Current promotions only" — by default we refuse to surface
+      // anything created more than 30 s ago. The client relies on SSE
+      // for anything fresher and on this endpoint strictly to catch a
+      // promo that landed in the tiny window between a launch broadcast
+      // and the client completing its stream handshake.
+      const maxAgeMs = req.query.maxAgeMs
+        ? Number(req.query.maxAgeMs)
+        : 30_000;
 
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
         return reply.code(400).send({ error: "invalid_coordinates" });
       }
 
       const here = { lat, lng };
+      const cutoff = Date.now() - Math.max(0, maxAgeMs);
       const active = campaignStore.listActive().filter((c) => {
+        const createdAt = new Date(c.createdAt).getTime();
+        if (Number.isFinite(createdAt) && createdAt < cutoff) return false;
         const d = haversineMeters(here, c.business.location);
         return d <= Math.min(c.radiusM, radiusM);
       });

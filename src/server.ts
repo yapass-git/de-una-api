@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import { registerBusinessRoutes } from "./routes/businesses.js";
 import { registerCampaignRoutes } from "./routes/campaigns.js";
+import { registerMeRoute } from "./routes/me.js";
 import { registerStreamRoute } from "./routes/stream.js";
 import { runSeed } from "./seed.js";
 
@@ -32,6 +33,12 @@ async function main(): Promise<void> {
     logger: {
       level: process.env.LOG_LEVEL ?? "info",
     },
+    // Fly.io (and any Vercel/Cloudflare-style proxy in front of us)
+    // forwards the real client IP through `X-Forwarded-For`. We need
+    // the accurate IP so `GET /me` can deterministically assign a
+    // display name per visitor instead of everyone sharing the proxy
+    // address. `true` = trust one hop, which matches Fly's topology.
+    trustProxy: true,
   });
 
   await app.register(cors, {
@@ -50,6 +57,7 @@ async function main(): Promise<void> {
 
   await registerBusinessRoutes(app);
   await registerCampaignRoutes(app);
+  await registerMeRoute(app);
   await registerStreamRoute(app);
 
   runSeed();
