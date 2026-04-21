@@ -1,5 +1,9 @@
 # Arquitectura, escalabilidad y seguridad (pitch)
 
+## Diagrama principal (para explicar en 10s)
+
+![YaPass architecture diagram](./yapass-architecture-linkedin.png)
+
 Estos diagramas están escritos para **explicar el MVP como si fuera un “core bancario ligero”**: cada promoción entra como una **orden**, pasa por **controles de riesgo**, queda **trazada**, y se distribuye por un **switch realtime** con políticas (geofence).
 
 ## Diagrama de arquitectura (alto nivel)
