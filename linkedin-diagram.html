@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>YaPass Realtime Promotions Platform</title>
+    <style>
+      :root{
+        --bg:#ffffff;
+        --ink:#0f172a;
+        --muted:#475569;
+        --line:#e2e8f0;
+        --shadow:0 10px 30px rgba(15,23,42,.10);
+        --purple:#4b1d8c;
+        --purpleSoft:#f4eafe;
+        --teal:#0b6b60;
+        --tealSoft:#d3f5ef;
+        --lav:#f6eeff;
+      }
+      html,body{height:100%; background:var(--bg); margin:0; font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;}
+      .frame{
+        width:1080px; height:1350px; margin:0;
+        position:relative; overflow:hidden; background:var(--bg);
+      }
+      .grid{
+        position:absolute; inset:0;
+        background:
+          linear-gradient(to right, rgba(226,232,240,.55) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(226,232,240,.55) 1px, transparent 1px);
+        background-size: 72px 72px;
+        opacity:.35;
+      }
+      .pad{position:absolute; inset:0; padding:72px 72px 58px;}
+      .title{font-size:54px; font-weight:900; letter-spacing:-.02em; color:var(--ink); line-height:1.05;}
+      .subtitle{margin-top:14px; font-size:22px; font-weight:700; color:var(--muted);}
+      .badgeRow{margin-top:22px; display:flex; gap:10px; flex-wrap:wrap;}
+      .chip{
+        border:1px solid var(--line); background:#fff; color:var(--muted);
+        padding:8px 12px; border-radius:999px; font-size:14px; font-weight:800;
+      }
+      .chip strong{color:var(--purple);}
+      .stack{margin-top:52px; display:flex; flex-direction:column; gap:34px;}
+      .card{
+        border:1px solid var(--line); border-radius:24px;
+        box-shadow: var(--shadow);
+        padding:26px 26px 24px;
+        background: linear-gradient(180deg, #fff 0%, #fff 65%, rgba(244,234,254,.35) 100%);
+      }
+      .cardHeader{display:flex; align-items:flex-start; justify-content:space-between; gap:18px;}
+      .cardTitle{display:flex; flex-direction:column; gap:6px;}
+      .repo{font-size:20px; font-weight:950; color:var(--purple); letter-spacing:-.01em;}
+      .cap{font-size:15px; font-weight:800; color:var(--muted);}
+      .icon{
+        width:54px; height:54px; border-radius:18px;
+        display:grid; place-items:center;
+        border:1px solid rgba(75,29,140,.20);
+        background: radial-gradient(circle at 30% 20%, var(--lav) 0%, var(--purpleSoft) 55%, #fff 100%);
+      }
+      .icon svg{width:28px; height:28px; fill:var(--purple);}
+      .bullets{margin-top:16px; padding:0; list-style:none; display:flex; flex-direction:column; gap:10px;}
+      .bullets li{display:flex; gap:10px; align-items:flex-start; color:var(--ink); font-size:18px; font-weight:700;}
+      .dot{
+        width:9px; height:9px; border-radius:999px; background:var(--teal);
+        margin-top:8px; flex:0 0 auto;
+      }
+      .arrow{
+        display:flex; align-items:center; gap:14px; padding-left:18px;
+        color:var(--muted); font-size:16px; font-weight:900; letter-spacing:.02em;
+      }
+      .arrowLine{
+        height:0; border-top:4px solid rgba(75,29,140,.25);
+        flex:1 1 auto; position:relative;
+      }
+      .arrowLine:after{
+        content:""; position:absolute; right:-4px; top:-8px;
+        border-left:14px solid rgba(75,29,140,.25);
+        border-top:10px solid transparent; border-bottom:10px solid transparent;
+      }
+      .core{
+        background: linear-gradient(180deg, rgba(244,234,254,.65) 0%, #fff 55%);
+        border-color: rgba(75,29,140,.22);
+      }
+      .core .icon{
+        border-color: rgba(11,107,96,.18);
+        background: radial-gradient(circle at 30% 20%, var(--tealSoft) 0%, rgba(246,238,255,.8) 55%, #fff 100%);
+      }
+      .core .icon svg{fill:var(--teal);}
+      .pillGrid{margin-top:18px; display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+      .pill{
+        border:1px solid rgba(11,107,96,.18);
+        background: rgba(211,245,239,.55);
+        padding:10px 12px; border-radius:14px;
+        font-size:14px; font-weight:950; color:var(--ink);
+      }
+      .note{
+        margin-top:14px; font-size:14px; font-weight:900; color:var(--muted);
+        display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;
+      }
+      .note strong{color:var(--teal);}
+      .footer{
+        position:absolute; left:72px; right:72px; bottom:26px;
+        border-top:1px solid var(--line);
+        padding-top:14px;
+        display:flex; justify-content:space-between; gap:12px; align-items:flex-start;
+        font-size:14px; font-weight:800; color:var(--muted);
+      }
+      .footer span b{color:var(--purple);}
+    </style>
+  </head>
+  <body>
+    <div class="frame">
+      <div class="grid"></div>
+      <div class="pad">
+        <div class="title">YaPass Realtime Promotions Platform</div>
+        <div class="subtitle">Core-style architecture: Backoffice → Risk-controlled Core → Realtime Delivery</div>
+        <div class="badgeRow">
+          <div class="chip"><strong>Order</strong> intake (schema)</div>
+          <div class="chip"><strong>Risk</strong> policy (geo + velocity)</div>
+          <div class="chip"><strong>Realtime</strong> switch (SSE fanout)</div>
+          <div class="chip"><strong>Audit</strong> & observability</div>
+        </div>
+
+        <div class="stack">
+          <div class="card">
+            <div class="cardHeader">
+              <div class="cardTitle">
+                <div class="repo">de-una-negocio</div>
+                <div class="cap">Merchant Backoffice</div>
+              </div>
+              <div class="icon" aria-hidden>
+                <svg viewBox="0 0 24 24">
+                  <path d="M3 7l1-4h16l1 4v2H3V7zm2 4h14v10H5V11zm3 2v6h2v-6H8zm6 0v6h2v-6h-2z"/>
+                </svg>
+              </div>
+            </div>
+            <ul class="bullets">
+              <li><span class="dot"></span><span>Create campaign (cashback/discount)</span></li>
+              <li><span class="dot"></span><span>POST <span style="color:var(--purple)">/campaigns</span></span></li>
+              <li><span class="dot"></span><span>Operator UX + confirmation</span></li>
+            </ul>
+          </div>
+
+          <div class="arrow">
+            <div style="min-width:170px; color:var(--purple);">1) Order intake</div>
+            <div class="arrowLine"></div>
+          </div>
+
+          <div class="card core">
+            <div class="cardHeader">
+              <div class="cardTitle">
+                <div class="repo" style="color:var(--teal)">de-una-api (Fastify)</div>
+                <div class="cap">Core + Realtime Switch</div>
+              </div>
+              <div class="icon" aria-hidden>
+                <svg viewBox="0 0 24 24">
+                  <path d="M19 18H6a4 4 0 010-8 5 5 0 019.7-1.7A4 4 0 1119 18z"/>
+                  <path d="M13 2l-1 7h4l-5 13 1-9H8l5-11z"/>
+                </svg>
+              </div>
+            </div>
+            <div class="pillGrid">
+              <div class="pill">Schema validation</div>
+              <div class="pill">Risk policy (geo + velocity)</div>
+              <div class="pill">Event ledger (active TTL)</div>
+              <div class="pill">SSE fanout /campaigns/stream</div>
+            </div>
+            <div class="note">
+              <span><strong>Observability</strong>: delivered, health, logs</span>
+              <span><strong>Routing</strong>: geofence fanout</span>
+            </div>
+          </div>
+
+          <div class="arrow">
+            <div style="min-width:210px; color:var(--purple);">2) Live broadcast (SSE)</div>
+            <div class="arrowLine"></div>
+          </div>
+
+          <div class="card">
+            <div class="cardHeader">
+              <div class="cardTitle">
+                <div class="repo">de-una (YaPass)</div>
+                <div class="cap">Customer Channel</div>
+              </div>
+              <div class="icon" aria-hidden>
+                <svg viewBox="0 0 24 24">
+                  <path d="M17 2H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2V4a2 2 0 00-2-2zm-5 19a1 1 0 110-2 1 1 0 010 2zM7 5h10v12H7V5z"/>
+                </svg>
+              </div>
+            </div>
+            <ul class="bullets">
+              <li><span class="dot"></span><span>EventSource SSE subscribe</span></li>
+              <li><span class="dot"></span><span>Nearby promo modal</span></li>
+              <li><span class="dot"></span><span>No stale promos (TTL)</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span><b>MVP today</b>: Fly.io single machine + SSE</span>
+        <span><b>Scale tomorrow</b>: Pub/Sub + Postgres + Redis</span>
+      </div>
+    </div>
+  </body>
+</html>
+
